@@ -1,5 +1,9 @@
 /**
- * index.js - 主邏輯 (V15.2 跑條強化版)
+ * index.js - 主邏輯 (V15.3 修正版)
+ * 
+ * 修正內容：
+ * 1. 技能觸發後立即檢查勝利，不等下回合
+ * 2. 每次換回合都顯示 Banner（包括技能觸發後）
  */
 
 import { GameConnection } from './connection.js';
@@ -107,6 +111,8 @@ class Game
 
         this.gameState.isProcessing = false;
         const isMyTurn = (this.gameState.turn === this.myRole);
+
+        // ✨ 修正 1：每次準備回合都顯示 Banner
         this.ui.updateTurnIndicator(this.gameState.turn, isMyTurn);
 
         // 生成手牌與同步
@@ -121,7 +127,7 @@ class Game
             }
         }
 
-        // --- 修正點 1: 無論玩家或 AI 回合都要啟動計時跑條 ---
+        // 無論玩家或 AI 回合都要啟動計時跑條
         this.startTimer();
 
         if (this.isAI && this.gameState.turn === 'AI')
@@ -195,7 +201,7 @@ class Game
 
     async executeMove(r, c, p)
     {
-        // --- 修正點 2: 有動作後立即停止計時並將跑條歸位到 12 點鐘 ---
+        // 有動作後立即停止計時並將跑條歸位到 12 點鐘
         this.stopTimer();
         this.ui.updateTimer(GAME_CONFIG.TURN_TIME_LIMIT, GAME_CONFIG.TURN_TIME_LIMIT);
 
@@ -208,12 +214,24 @@ class Game
         this.ui.render(this.board);
 
         await new Promise(r => setTimeout(r, 300));
+
+        // ✨ 修正 2：技能觸發時的勝利檢測
         while (await this.skillSystem.checkAndTriggerSkills(m => this.ui.showMessage(m)))
         {
             this.ui.render(this.board);
             await new Promise(r => setTimeout(r, 300));
+
+            // 🔥 關鍵修正：每次技能觸發後都立即檢查勝利
+            // 這樣法師轉化後立即形成五連時能立刻結束遊戲
+            if (this.board.checkWin(p))
+            {
+                this.gameState.isOver = true;
+                this.ui.showWin(p === this.myRole);
+                return;
+            }
         }
 
+        // 最後一次檢查勝利（原有邏輯）
         if (this.board.checkWin(p))
         {
             this.gameState.isOver = true;
