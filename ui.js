@@ -158,11 +158,14 @@ export class GameUI
         // 移除動畫類別，重新觸發
         banner.classList.remove('show');
 
+        // 強制瀏覽器重排（reflow）
+        void banner.offsetHeight;
+
         // 重新觸發動畫（必須延遲以重新計算）
         setTimeout(() =>
         {
             banner.classList.add('show');
-        }, 10);
+        }, 5);
     }
 
     setMyId(id) { document.getElementById('my-id').innerText = id; }

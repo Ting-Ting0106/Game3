@@ -213,7 +213,7 @@ class Game
         this.board.placePiece(r, c, { p, type: this.gameState.hand, knightDir: this.gameState.handDir });
         this.ui.render(this.board);
 
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 400));
 
         // ✨ 修正 2：技能觸發時的勝利檢測
         while (await this.skillSystem.checkAndTriggerSkills(m => this.ui.showMessage(m)))
